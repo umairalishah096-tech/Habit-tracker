@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pro Habit Tracker</title>
+
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Google Fonts for Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- TOP HEADER / DASHBOARD METRICS -->
+      <header class="dashboard-header">
+        <div class="header-top">
+          <div class="brand">
+            <span class="brand-icon">⚡</span>
+            <h1>Habit Pulse</h1>
+          </div>
+          <div class="header-controls">
+            <div class="date-selector">
+              <select id="monthSelect" class="select-input"></select>
+              <select id="yearSelect" class="select-input"></select>
+            </div>
+            <button id="addHabitBtn" class="btn btn-primary">
+              <span class="btn-icon">+</span> Add Habit
+            </button>
+          </div>
+        </div>
+
+        <div class="header-metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Date Range</span>
+            <div class="metric-value-group">
+              <span id="dateRangeText" class="metric-value text-sm">--</span>
+            </div>
+            <span id="totalDaysText" class="metric-sub">Total Days: --</span>
+          </div>
+
+          <div class="metric-card">
+            <span class="metric-label">Overall Success Rate</span>
+            <div class="metric-value-group">
+              <span id="headerSuccessRate" class="metric-value">0%</span>
+            </div>
+            <span class="metric-sub">Across all tracked habits</span>
+          </div>
+
+          <div class="metric-card chart-card">
+            <span class="metric-label">Monthly Completion Trend</span>
+            <div class="canvas-wrapper">
+              <canvas id="monthlyTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- MAIN TRACKER SECTION -->
+      <main class="main-content">
+        <div class="section-header">
+          <h2>Habit Matrix</h2>
+          <div class="legend">
+            <span class="legend-item"
+              ><span class="dot pending"></span> Pending</span
+            >
+            <span class="legend-item"
+              ><span class="dot completed"></span> Completed</span
+            >
+            <span class="legend-item"
+              ><span class="dot missed"></span> Missed</span
+            >
+          </div>
+        </div>
+
+        <!-- HABIT TABLE CONTAINER -->
+        <div class="table-responsive">
+          <table class="habit-table" id="habitTable">
+            <thead>
+              <tr id="tableHeaderRow">
+                <th class="col-habit">Habit Name</th>
+                <th class="col-goal">Goal</th>
+                <!-- Day columns 1-31 dynamically injected -->
+                <th class="col-progress">Progress</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="habitTableBody">
+              <!-- Dynamic habit rows injected here -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- MID-PAGE SUMMARY CARDS -->
+        <section class="summary-section">
+          <div class="summary-card">
+            <h3>Monthly Progress</h3>
+            <div class="progress-bar-container">
+              <div id="monthlyProgressBar" class="progress-bar-fill"></div>
+            </div>
+            <div class="summary-footer">
+              <span id="monthlyProgressText">0% Completed</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h3>Active Habits Overview</h3>
+            <div class="stat-highlight">
+              <span id="completedHabitsCount" class="stat-number">0 / 0</span>
+              <span class="stat-label">Habits Met Goal</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- CIRCULAR PROGRESS METRICS -->
+        <section class="circular-cards-grid">
+          <div class="circle-card">
+            <h4>Monthly Progress</h4>
+            <div class="circle-chart-wrapper">
+              <svg class="circle-chart" viewBox="0 0 36 36">
+                <path
+                  class="circle-bg"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  id="circlePathMonthly"
+                  class="circle-fill"
+                  stroke-dasharray="0, 100"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <span id="circleTextMonthly" class="circle-percentage">0%</span>
+            </div>
+            <p class="circle-sub">Target ratio completed</p>
+          </div>
+
+          <div class="circle-card">
+            <h4>Consistency</h4>
+            <div class="circle-chart-wrapper">
+              <svg class="circle-chart" viewBox="0 0 36 36">
+                <path
+                  class="circle-bg"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  id="circlePathConsistency"
+                  class="circle-fill accent-blue"
+                  stroke-dasharray="0, 100"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <span id="circleTextConsistency" class="circle-percentage"
+                >0%</span
+              >
+            </div>
+            <p class="circle-sub">Active day frequency</p>
+          </div>
+
+          <div class="circle-card">
+            <h4>Momentum</h4>
+            <div class="circle-chart-wrapper">
+              <svg class="circle-chart" viewBox="0 0 36 36">
+                <path
+                  class="circle-bg"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  id="circlePathMomentum"
+                  class="circle-fill accent-purple"
+                  stroke-dasharray="0, 100"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <span id="circleTextMomentum" class="circle-percentage">0%</span>
+            </div>
+            <p class="circle-sub">Current streak score</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- MODAL DIALOG: ADD / EDIT HABIT -->
+    <div id="habitModal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="modalTitle">Add New Habit</h3>
+          <button id="closeModalBtn" class="close-btn">&times;</button>
+        </div>
+        <form id="habitForm">
+          <input type="hidden" id="habitIdInput" />
+
+          <div class="form-group">
+            <label for="habitTitleInput">Habit Title</label>
+            <input
+              type="text"
+              id="habitTitleInput"
+              class="form-input"
+              placeholder="e.g., Morning Meditation"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="habitGoalInput">Monthly Goal (Days)</label>
+              <input
+                type="number"
+                id="habitGoalInput"
+                class="form-input"
+                min="1"
+                max="31"
+                value="20"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="habitCategoryInput">Category</label>
+              <select id="habitCategoryInput" class="form-input">
+                <option value="Health">Health</option>
+                <option value="Fitness">Fitness</option>
+                <option value="Productivity">Productivity</option>
+                <option value="Mindset">Mindset</option>
+                <option value="Learning">Learning</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="habitIconInput">Icon / Emoji</label>
+              <input
+                type="text"
+                id="habitIconInput"
+                class="form-input"
+                placeholder="e.g., 🧘"
+                value="🎯"
+                maxlength="4"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="habitColorInput">Accent Color</label>
+              <input
+                type="color"
+                id="habitColorInput"
+                class="form-color-input"
+                value="#10b981"
+              />
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancelModalBtn" class="btn btn-secondary">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">Save Habit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script src="script1.js" type="text/javascript" charset="utf-8"></script>
+  </body>
+</html>
