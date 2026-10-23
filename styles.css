@@ -368,6 +368,99 @@ canvas {
 }
 
 /* ==========================================================================
+   DONE & NOT DONE MATRIX SUMMARY ROWS (Footer)
+   ========================================================================== */
+.summary-row {
+  background-color: rgba(15, 23, 42, 0.75);
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.summary-row td {
+  padding: 8px 4px !important;
+  border-top: 1px solid var(--border-color);
+}
+
+.done-row {
+  border-top: 2px solid var(--border-color);
+}
+
+.summary-title {
+  text-align: left !important;
+  padding-left: 14px !important;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.done-title, .not-done-title {
+  color: #38bdf8; /* Cyan color matching screenshot */
+}
+
+.summary-cell {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.done-row .summary-cell {
+  color: #10b981; /* Vibrant green matching screenshot */
+}
+
+.not-done-row .summary-cell {
+  color: #f43f5e; /* Vibrant pink/red matching screenshot */
+}
+
+.summary-cell.empty {
+  color: transparent;
+}
+
+.summary-total {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+body.light-mode .summary-row {
+  background-color: #f1f5f9;
+}
+
+body.light-mode .done-title,
+body.light-mode .not-done-title {
+  color: #0284c7;
+}
+
+body.light-mode .done-row .summary-cell {
+  color: #059669;
+}
+
+body.light-mode .not-done-row .summary-cell {
+  color: #e11d48;
+}
+
+/* Print Summary Rows */
+.p-summary-row {
+  font-weight: 700;
+}
+
+.p-done-row td {
+  background-color: #f0fdf4 !important;
+  color: #047857 !important;
+  font-weight: 700;
+}
+
+.p-not-done-row td {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  font-weight: 700;
+}
+
+.p-summary-title {
+  text-align: left !important;
+  padding-left: 8px !important;
+  font-weight: 800;
+}
+
+
+/* ==========================================================================
    MID SECTION SUMMARY & CIRCULAR CARDS
    ========================================================================== */
 .summary-section {
@@ -594,5 +687,400 @@ canvas {
 
   .circular-cards-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   NEW FEATURES (DARK MODE, BADGES, GITHUB GRAPH, CALENDAR)
+   ========================================================================== */
+body.light-mode {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #e2e8f0;
+  --border-color: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+}
+
+body.light-mode .modal-overlay {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-hover);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.badge-icon {
+  font-size: 2rem;
+}
+
+.badge-label {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.github-graph {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.github-day {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background-color: #ebedf0;
+}
+
+body:not(.light-mode) .github-day {
+  background-color: #161b22;
+}
+
+/* GitHub Contribution Colors */
+.github-day[data-level="1"] { background-color: #9be9a8; }
+.github-day[data-level="2"] { background-color: #40c463; }
+.github-day[data-level="3"] { background-color: #30a14e; }
+.github-day[data-level="4"] { background-color: #216e39; }
+
+body:not(.light-mode) .github-day[data-level="1"] { background-color: #0e4429; }
+body:not(.light-mode) .github-day[data-level="2"] { background-color: #006d32; }
+body:not(.light-mode) .github-day[data-level="3"] { background-color: #26a641; }
+body:not(.light-mode) .github-day[data-level="4"] { background-color: #39d353; }
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.calendar-day:hover {
+  background-color: var(--bg-hover);
+}
+
+.calendar-day.empty {
+  border: none;
+  cursor: default;
+  background: none;
+}
+
+.calendar-day.completed {
+  background-color: var(--accent-green-light);
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+.calendar-day.missed {
+  background-color: var(--accent-red-light);
+  color: var(--accent-red);
+  border-color: var(--accent-red);
+}
+
+/* ==========================================================================
+   PRINT MODAL & PRINTABLE ROUTINE SHEET STYLES
+   ========================================================================== */
+.print-modal-card {
+  max-width: 960px;
+  width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.print-options-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  align-items: center;
+}
+
+.print-opt-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.print-opt-item label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.print-opt-item .form-input {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+.print-hint-box {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 4px solid var(--accent-blue);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.print-preview-scroll {
+  flex: 1;
+  overflow: auto;
+  background: #334155;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  max-height: 52vh;
+}
+
+/* Paper Preview on Screen */
+.print-paper-preview {
+  background: #ffffff;
+  color: #111827;
+  padding: 20px 24px;
+  border-radius: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+  min-width: 900px;
+  font-family: var(--font-family);
+  font-size: 9pt;
+}
+
+/* Printable Sheet Components (Used in both preview and print) */
+.printable-sheet {
+  width: 100%;
+  color: #111827;
+}
+
+.print-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #111827;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.print-main-title {
+  font-size: 14pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #111827;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.print-subtitle {
+  font-size: 8pt;
+  color: #4b5563;
+  margin-top: 2px;
+}
+
+.print-month-badge {
+  background: #111827;
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.print-meta-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1.2fr 1fr 1.6fr;
+  gap: 10px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+  font-size: 8pt;
+  color: #1f2937;
+}
+
+.print-meta-item strong {
+  color: #111827;
+}
+
+/* Print Table */
+.print-habit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 7.8pt;
+  line-height: 1.2;
+  table-layout: fixed;
+}
+
+.print-habit-table th,
+.print-habit-table td {
+  border: 1px solid #9ca3af;
+  padding: 4px 3px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.print-habit-table th {
+  background-color: #f3f4f6;
+  color: #111827;
+  font-weight: 700;
+  font-size: 7.5pt;
+}
+
+.print-habit-table tr:nth-child(even) td {
+  background-color: #fafafa;
+}
+
+.p-col-num { width: 22px; text-align: center; }
+.p-col-time { width: 105px; text-align: left; padding-left: 5px !important; font-weight: 600; font-size: 7.2pt; color: #1e3a8a; }
+.p-col-habit { width: 185px; text-align: left; padding-left: 6px !important; font-weight: 600; color: #111827; }
+.p-col-cat { width: 68px; font-size: 7pt; color: #4b5563; text-transform: uppercase; }
+.p-col-goal { width: 36px; font-weight: 600; }
+.p-col-score { width: 44px; font-size: 7.5pt; font-weight: 600; }
+
+.p-day-th {
+  width: 20px;
+  padding: 2px 0 !important;
+}
+
+.p-day-cell {
+  width: 20px;
+  height: 20px;
+  padding: 0 !important;
+}
+
+/* Empty Checkbox Box for manual pen/pencil ticking/crossing */
+.p-box {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 1.2px solid #6b7280;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+.p-mark {
+  font-weight: 800;
+  font-size: 9pt;
+  line-height: 1;
+}
+
+.p-mark.completed {
+  color: #059669;
+}
+
+.p-mark.missed {
+  color: #dc2626;
+}
+
+/* Print Footer Reflections */
+.print-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+  border-top: 1.5px solid #111827;
+  padding-top: 8px;
+  font-size: 8pt;
+}
+
+.print-notes-lines {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.print-line {
+  border-bottom: 1px dashed #9ca3af;
+  height: 10px;
+}
+
+/* Hide printableArea in screen view */
+.printable-sheet-root {
+  display: none;
+}
+
+/* ==========================================================================
+   NATIVE BROWSER PRINT RULES (@media print)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 6mm 8mm;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    font-size: 8pt;
+  }
+
+  /* Hide everything on the page except #printableArea */
+  body > *:not(#printableArea) {
+    display: none !important;
+  }
+
+  .printable-sheet-root {
+    display: block !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-habit-table {
+    page-break-inside: auto;
+  }
+
+  .print-habit-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  .print-habit-table th {
+    background-color: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .print-habit-table tr:nth-child(even) td {
+    background-color: #f9fafb !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .print-month-badge {
+    background: #111827 !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
   }
 }

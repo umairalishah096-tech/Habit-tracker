@@ -26,6 +26,9 @@
             <h1>Habit Pulse</h1>
           </div>
           <div class="header-controls">
+            <button id="resetAllBtn" class="btn btn-secondary" style="font-size: 0.9rem; padding: 0.5rem;" title="Reset All Data">🔄 Reset</button>
+            <button id="printBtn" class="btn btn-secondary" style="font-size: 0.9rem; padding: 0.5rem;" title="Print Routine Tracker Sheet">🖨️ Print Sheet</button>
+            <button id="themeToggleBtn" class="btn btn-secondary" style="font-size: 1.2rem; padding: 0.5rem;" title="Toggle Dark Mode">🌙</button>
             <div class="date-selector">
               <select id="monthSelect" class="select-input"></select>
               <select id="yearSelect" class="select-input"></select>
@@ -94,6 +97,9 @@
             <tbody id="habitTableBody">
               <!-- Dynamic habit rows injected here -->
             </tbody>
+            <tfoot id="habitTableFoot">
+              <!-- Summary rows (Done & Not Done) injected here -->
+            </tfoot>
           </table>
         </div>
 
@@ -182,6 +188,49 @@
             <p class="circle-sub">Current streak score</p>
           </div>
         </section>
+
+        <!-- STREAKS AND BADGES -->
+        <section class="summary-section" style="margin-top: 2rem;">
+          <div class="summary-card" style="text-align: center;">
+            <h3>Current Streak</h3>
+            <div class="stat-highlight">
+              <span id="currentStreakText" class="stat-number" style="color: var(--accent-green)">0</span>
+              <span class="stat-label">Days</span>
+            </div>
+          </div>
+          <div class="summary-card" style="text-align: center;">
+            <h3>Highest Streak</h3>
+            <div class="stat-highlight">
+              <span id="highestStreakText" class="stat-number" style="color: var(--accent-purple)">0</span>
+              <span class="stat-label">Days</span>
+            </div>
+          </div>
+          <div class="summary-card" style="text-align: center;">
+            <h3>Badges</h3>
+            <div id="badgesContainer" style="display: flex; gap: 10px; justify-content: center; font-size: 2rem; margin-top: 1rem;">
+              <!-- Badges injected dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- YEARLY CONTRIBUTION GRAPH -->
+        <section class="summary-section" style="margin-top: 2rem; display: block;">
+          <div class="summary-card" style="width: 100%; overflow-x: auto;">
+            <h3>Yearly Contributions</h3>
+            <div id="githubGraphContainer" class="github-graph">
+              <!-- Graph injected dynamically -->
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; display: flex; justify-content: flex-end; gap: 5px; align-items: center;">
+              Less
+              <span style="display: inline-block; width: 10px; height: 10px; background-color: #ebedf0; border-radius: 2px;"></span>
+              <span style="display: inline-block; width: 10px; height: 10px; background-color: #9be9a8; border-radius: 2px;"></span>
+              <span style="display: inline-block; width: 10px; height: 10px; background-color: #40c463; border-radius: 2px;"></span>
+              <span style="display: inline-block; width: 10px; height: 10px; background-color: #30a14e; border-radius: 2px;"></span>
+              <span style="display: inline-block; width: 10px; height: 10px; background-color: #216e39; border-radius: 2px;"></span>
+              More
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -195,15 +244,26 @@
         <form id="habitForm">
           <input type="hidden" id="habitIdInput" />
 
-          <div class="form-group">
-            <label for="habitTitleInput">Habit Title</label>
-            <input
-              type="text"
-              id="habitTitleInput"
-              class="form-input"
-              placeholder="e.g., Morning Meditation"
-              required
-            />
+          <div class="form-row">
+            <div class="form-group" style="flex: 1.4;">
+              <label for="habitTitleInput">Habit Title</label>
+              <input
+                type="text"
+                id="habitTitleInput"
+                class="form-input"
+                placeholder="e.g., Morning Meditation"
+                required
+              />
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="habitTimeInput">Routine Time / Schedule</label>
+              <input
+                type="text"
+                id="habitTimeInput"
+                class="form-input"
+                placeholder="e.g., 5:15 AM or 9:00 – 10:20 AM"
+              />
+            </div>
           </div>
 
           <div class="form-row">
@@ -222,13 +282,14 @@
 
             <div class="form-group">
               <label for="habitCategoryInput">Category</label>
-              <select id="habitCategoryInput" class="form-input">
-                <option value="Health">Health</option>
-                <option value="Fitness">Fitness</option>
-                <option value="Productivity">Productivity</option>
-                <option value="Mindset">Mindset</option>
-                <option value="Learning">Learning</option>
-              </select>
+              <input list="categoryOptions" id="habitCategoryInput" class="form-input" placeholder="Select or type custom category">
+              <datalist id="categoryOptions">
+                <option value="Health">
+                <option value="Fitness">
+                <option value="Productivity">
+                <option value="Mindset">
+                <option value="Learning">
+              </datalist>
             </div>
           </div>
 
@@ -265,6 +326,84 @@
         </form>
       </div>
     </div>
+
+    <!-- MODAL DIALOG: CALENDAR VIEW -->
+    <div id="calendarModal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-card" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3 id="calendarModalTitle">Habit Calendar</h3>
+          <button id="closeCalendarBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <button id="prevMonthBtn" class="btn btn-secondary">&lt;</button>
+          <h4 id="calendarMonthYear" style="margin: 0;"></h4>
+          <button id="nextMonthBtn" class="btn btn-secondary">&gt;</button>
+        </div>
+        <div class="calendar-grid-header" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-muted);">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div id="calendarGrid" class="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
+          <!-- Calendar days injected dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DIALOG: PRINT ROUTINE SHEET -->
+    <div id="printModal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-card print-modal-card">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.4rem;">🖨️</span>
+            <div>
+              <h3 id="printModalTitle" style="margin: 0; font-size: 1.25rem;">Print Habit Tracker Sheet</h3>
+              <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Print your routine for manual pen / pencil tracking (A4 Landscape)</p>
+            </div>
+          </div>
+          <button id="closePrintBtn" class="close-btn">&times;</button>
+        </div>
+
+        <!-- Options Toolbar -->
+        <div class="print-options-toolbar">
+          <div class="print-opt-item">
+            <label for="printModeSelect"><strong>Marking Style:</strong></label>
+            <select id="printModeSelect" class="form-input">
+              <option value="blank">⚪ Blank Boxes (For Manual Pen / Pencil Marking)</option>
+              <option value="progress">🔘 With Current Progress (Include App Marks)</option>
+            </select>
+          </div>
+          <div class="print-opt-item">
+            <label for="printMonthSelect"><strong>Month:</strong></label>
+            <select id="printMonthSelect" class="form-input"></select>
+          </div>
+          <div class="print-opt-item">
+            <label for="printYearSelect"><strong>Year:</strong></label>
+            <select id="printYearSelect" class="form-input"></select>
+          </div>
+        </div>
+
+        <div class="print-hint-box">
+          <span>💡 <strong>Print Tip:</strong> Select <strong>Landscape</strong> orientation on <strong>A4</strong> paper and ensure <strong>"Background graphics"</strong> is checked in the browser print window.</span>
+        </div>
+
+        <!-- Live Preview Scrollable Paper -->
+        <div class="print-preview-scroll">
+          <div id="printPreviewContent" class="print-paper-preview">
+            <!-- Sheet injected dynamically -->
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 10px;">
+          <button type="button" id="cancelPrintBtn" class="btn btn-secondary">Close</button>
+          <button type="button" id="executePrintBtn" class="btn btn-primary" style="background-color: #2563eb;">
+            <span>🖨️</span> Print Now / Save PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEDICATED PRINT CONTAINER (Shown only when printing) -->
+    <div id="printableArea" class="printable-sheet-root"></div>
+
     <script src="script1.js" type="text/javascript" charset="utf-8"></script>
   </body>
 </html>

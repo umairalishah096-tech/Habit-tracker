@@ -16,6 +16,38 @@ const totalDaysText = document.getElementById("totalDaysText");
 const headerSuccessRate = document.getElementById("headerSuccessRate");
 const habitTableBody = document.getElementById("habitTableBody");
 const tableHeaderRow = document.getElementById("tableHeaderRow");
+const habitTableFoot = document.getElementById("habitTableFoot");
+
+// New Elements
+const resetAllBtn = document.getElementById("resetAllBtn");
+const printBtn = document.getElementById("printBtn");
+const themeToggleBtn = document.getElementById("themeToggleBtn");
+const currentStreakText = document.getElementById("currentStreakText");
+const highestStreakText = document.getElementById("highestStreakText");
+const badgesContainer = document.getElementById("badgesContainer");
+const githubGraphContainer = document.getElementById("githubGraphContainer");
+
+// Print Modal Elements
+const printModal = document.getElementById("printModal");
+const closePrintBtn = document.getElementById("closePrintBtn");
+const cancelPrintBtn = document.getElementById("cancelPrintBtn");
+const executePrintBtn = document.getElementById("executePrintBtn");
+const printModeSelect = document.getElementById("printModeSelect");
+const printMonthSelect = document.getElementById("printMonthSelect");
+const printYearSelect = document.getElementById("printYearSelect");
+const printPreviewContent = document.getElementById("printPreviewContent");
+const printableArea = document.getElementById("printableArea");
+
+// Calendar Modal Elements
+const calendarModal = document.getElementById("calendarModal");
+const closeCalendarBtn = document.getElementById("closeCalendarBtn");
+const calendarModalTitle = document.getElementById("calendarModalTitle");
+const calendarMonthYear = document.getElementById("calendarMonthYear");
+const prevMonthBtn = document.getElementById("prevMonthBtn");
+const nextMonthBtn = document.getElementById("nextMonthBtn");
+const calendarGrid = document.getElementById("calendarGrid");
+let currentCalendarHabitId = null;
+let currentCalendarDate = new Date();
 
 // Summary & Metric Elements
 const monthlyProgressBar = document.getElementById("monthlyProgressBar");
@@ -37,6 +69,7 @@ const habitForm = document.getElementById("habitForm");
 const modalTitle = document.getElementById("modalTitle");
 const habitIdInput = document.getElementById("habitIdInput");
 const habitTitleInput = document.getElementById("habitTitleInput");
+const habitTimeInput = document.getElementById("habitTimeInput");
 const habitGoalInput = document.getElementById("habitGoalInput");
 const habitCategoryInput = document.getElementById("habitCategoryInput");
 const habitIconInput = document.getElementById("habitIconInput");
@@ -51,19 +84,39 @@ const ctx = canvas ? canvas.getContext("2d") : null;
    ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   initSelectors();
+  initTheme();
+  setupEventListeners();
+  loadDataFromBackend();
+});
 
-  // Pehle localStorage check karo, agar data hai toh wahi load karo
-  // Sirf pehli baar (ya empty hone par) seed data lagao
-  const stored = localStorage.getItem("pro_habit_tracker_data");
-  if (stored) {
-    loadStateFromStorage();
-  } else {
+async function loadDataFromBackend() {
+  try {
+    const res = await fetch('/api/data');
+    if(res.ok) {
+      const data = await res.json();
+      if(data.length > 0) {
+        habits = data;
+      } else {
+        loadSeedData();
+        saveStateToStorage();
+      }
+    } else {
+      loadSeedData();
+    }
+  } catch(e) {
+    console.error("Error loading data", e);
     loadSeedData();
   }
-
-  setupEventListeners();
   renderApp();
-});
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem("habit_pulse_theme");
+  if (savedTheme === "light") {
+    document.body.classList.add("light-mode");
+  }
+}
+
 
 // Setup Month/Year Selector options
 function initSelectors() {
@@ -326,22 +379,22 @@ function loadSeedData() {
 }
 
 /* ==========================================================================
-   LOCALSTORAGE HANDLERS
+   LOCALSTORAGE HANDLERS / API SAVE
    ========================================================================== */
-function saveStateToStorage() {
-  localStorage.setItem("pro_habit_tracker_data", JSON.stringify(habits));
+async function saveStateToStorage() {
+  try {
+    await fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(habits)
+    });
+  } catch(e) {
+    console.error("Failed to save to backend", e);
+  }
 }
 
 function loadStateFromStorage() {
-  const stored = localStorage.getItem("pro_habit_tracker_data");
-  if (stored) {
-    try {
-      habits = JSON.parse(stored);
-    } catch (e) {
-      console.error("Failed to parse local storage data:", e);
-      habits = [];
-    }
-  }
+  // Not used anymore, replaced by loadDataFromBackend
 }
 
 /* ==========================================================================
@@ -367,6 +420,52 @@ function setupEventListeners() {
   });
 
   habitForm.addEventListener("submit", handleFormSubmit);
+
+  resetAllBtn.addEventListener("click", () => {
+    if (confirm("Are you sure you want to reset all habits and progress? This cannot be undone.")) {
+      habits = [];
+      saveStateToStorage();
+      renderApp();
+    }
+  });
+
+  themeToggleBtn.addEventListener("click", () => {
+    document.body.classList.toggle("light-mode");
+    const isLight = document.body.classList.contains("light-mode");
+    localStorage.setItem("habit_pulse_theme", isLight ? "light" : "dark");
+  });
+
+  closeCalendarBtn.addEventListener("click", closeCalendarModal);
+  calendarModal.addEventListener("click", (e) => {
+    if (e.target === calendarModal) closeCalendarModal();
+  });
+
+  prevMonthBtn.addEventListener("click", () => {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+    renderCalendarGrid();
+  });
+
+  nextMonthBtn.addEventListener("click", () => {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+    renderCalendarGrid();
+  });
+
+  // Print Sheet Event Listeners
+  printBtn.addEventListener("click", openPrintModal);
+  closePrintBtn.addEventListener("click", closePrintModal);
+  cancelPrintBtn.addEventListener("click", closePrintModal);
+  printModal.addEventListener("click", (e) => {
+    if (e.target === printModal) closePrintModal();
+  });
+  printModeSelect.addEventListener("change", renderPrintPreview);
+  printMonthSelect.addEventListener("change", renderPrintPreview);
+  printYearSelect.addEventListener("change", renderPrintPreview);
+  executePrintBtn.addEventListener("click", executePrint);
+
+  // Auto-sync printable area on native print (Ctrl+P)
+  window.addEventListener("beforeprint", () => {
+    preparePrintableArea();
+  });
 }
 
 /* ==========================================================================
@@ -378,6 +477,7 @@ function renderApp() {
   renderHeaderMetrics(daysInMonth);
   renderTableHeader(daysInMonth);
   renderTableBody(daysInMonth);
+  renderTableFooter(daysInMonth);
   renderDashboardCards(daysInMonth);
   renderTrendChart(daysInMonth);
 }
@@ -522,6 +622,7 @@ function renderTableBody(daysInMonth) {
     rowHTML += `
       <td class="col-actions">
         <div class="action-btn-group">
+          <button class="icon-btn calendar-btn" onclick="openCalendarModal('${habit.id}')" title="Calendar View">📅</button>
           <button class="icon-btn edit-btn" onclick="openModal('${habit.id}')" title="Edit Habit">✏️</button>
           <button class="icon-btn delete-btn" onclick="deleteHabit('${habit.id}')" title="Delete Habit">🗑️</button>
         </div>
@@ -565,6 +666,66 @@ function handleDayClick(e) {
 
   saveStateToStorage();
   renderApp();
+}
+
+/* ==========================================================================
+   DONE & NOT DONE MATRIX SUMMARY ROWS
+   ========================================================================== */
+function renderTableFooter(daysInMonth) {
+  if (!habitTableFoot) return;
+  if (habits.length === 0) {
+    habitTableFoot.innerHTML = "";
+    return;
+  }
+
+  let doneCellsHTML = "";
+  let notDoneCellsHTML = "";
+  let monthTotalDone = 0;
+  let monthTotalOpportunities = habits.length * daysInMonth;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const key = formatDateKey(selectedYear, selectedMonth, day);
+    let doneCount = 0;
+    let hasActivity = false;
+
+    habits.forEach((habit) => {
+      const status = habit.logs ? habit.logs[key] : null;
+      if (status === "completed") {
+        doneCount++;
+        hasActivity = true;
+      } else if (status === "missed") {
+        hasActivity = true;
+      }
+    });
+
+    monthTotalDone += doneCount;
+    const notDoneCount = habits.length - doneCount;
+
+    if (hasActivity) {
+      doneCellsHTML += `<td class="summary-cell done-val" title="Day ${day}: ${doneCount} Completed">${doneCount}</td>`;
+      notDoneCellsHTML += `<td class="summary-cell not-done-val" title="Day ${day}: ${notDoneCount} Not Done">${notDoneCount}</td>`;
+    } else {
+      doneCellsHTML += `<td class="summary-cell done-val empty"></td>`;
+      notDoneCellsHTML += `<td class="summary-cell not-done-val empty"></td>`;
+    }
+  }
+
+  const monthTotalNotDone = monthTotalOpportunities - monthTotalDone;
+
+  habitTableFoot.innerHTML = `
+    <tr class="summary-row done-row">
+      <td colspan="3" class="summary-title done-title">Done</td>
+      ${doneCellsHTML}
+      <td class="col-progress summary-total done-val" title="Total Completed This Month">${monthTotalDone}</td>
+      <td class="col-actions"></td>
+    </tr>
+    <tr class="summary-row not-done-row">
+      <td colspan="3" class="summary-title not-done-title">Not Done</td>
+      ${notDoneCellsHTML}
+      <td class="col-progress summary-total not-done-val" title="Total Not Done This Month">${monthTotalNotDone}</td>
+      <td class="col-actions"></td>
+    </tr>
+  `;
 }
 
 /* ==========================================================================
@@ -734,6 +895,7 @@ function openModal(habitId = null) {
     modalTitle.textContent = "Edit Habit";
     habitIdInput.value = habit.id;
     habitTitleInput.value = habit.title;
+    habitTimeInput.value = habit.time || "";
     habitGoalInput.value = habit.goal;
     habitCategoryInput.value = habit.category;
     habitIconInput.value = habit.icon || "🎯";
@@ -741,6 +903,7 @@ function openModal(habitId = null) {
   } else {
     modalTitle.textContent = "Add New Habit";
     habitIdInput.value = "";
+    habitTimeInput.value = "";
   }
 
   habitModal.classList.add("active");
@@ -757,6 +920,7 @@ function handleFormSubmit(e) {
 
   const id = habitIdInput.value;
   const title = habitTitleInput.value.trim();
+  const time = habitTimeInput.value.trim();
   const goal = parseInt(habitGoalInput.value, 10);
   const category = habitCategoryInput.value;
   const icon = habitIconInput.value.trim() || "🎯";
@@ -769,6 +933,7 @@ function handleFormSubmit(e) {
     const habit = habits.find((h) => h.id === id);
     if (habit) {
       habit.title = title;
+      habit.time = time;
       habit.goal = goal;
       habit.category = category;
       habit.icon = icon;
@@ -779,6 +944,7 @@ function handleFormSubmit(e) {
     const newHabit = {
       id: "habit_" + Date.now(),
       title,
+      time,
       goal,
       category,
       icon,
@@ -814,4 +980,403 @@ function escapeHTML(str) {
         '"': "&quot;",
       })[tag] || tag,
   );
+}
+
+/* ==========================================================================
+   NEW FEATURES LOGIC
+   ========================================================================== */
+
+function calculateStreaksAndGraph() {
+  if (habits.length === 0) return;
+
+  // Aggregate all completed habits by date
+  const completionsByDate = {};
+  habits.forEach(habit => {
+    Object.keys(habit.logs).forEach(date => {
+      if (habit.logs[date] === 'completed') {
+        completionsByDate[date] = (completionsByDate[date] || 0) + 1;
+      }
+    });
+  });
+
+  const sortedDates = Object.keys(completionsByDate).sort();
+  
+  // Calculate Streaks
+  let currentStreak = 0;
+  let highestStreak = 0;
+  let tempStreak = 0;
+  let today = new Date();
+  
+  if (sortedDates.length > 0) {
+      let prevDate = new Date(sortedDates[0]);
+      tempStreak = 1;
+      highestStreak = 1;
+
+      for (let i = 1; i < sortedDates.length; i++) {
+        const currDate = new Date(sortedDates[i]);
+        const diffTime = Math.abs(currDate - prevDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        
+        if (diffDays === 1) {
+            tempStreak++;
+            if (tempStreak > highestStreak) highestStreak = tempStreak;
+        } else if (diffDays > 1) {
+            tempStreak = 1;
+        }
+        prevDate = currDate;
+      }
+      
+      const lastDate = new Date(sortedDates[sortedDates.length - 1]);
+      const diffFromToday = Math.ceil(Math.abs(today - lastDate) / (1000 * 60 * 60 * 24));
+      
+      if (diffFromToday <= 1) {
+          currentStreak = tempStreak;
+      } else {
+          currentStreak = 0;
+      }
+  }
+
+  currentStreakText.textContent = currentStreak;
+  highestStreakText.textContent = highestStreak;
+
+  // Badges logic
+  badgesContainer.innerHTML = '';
+  if (highestStreak >= 7) {
+      badgesContainer.innerHTML += '<div class="badge"><span class="badge-icon">🔥</span><span class="badge-label">7-Day Streak</span></div>';
+  }
+  if (highestStreak >= 30) {
+      badgesContainer.innerHTML += '<div class="badge"><span class="badge-icon">🏆</span><span class="badge-label">30-Day Streak</span></div>';
+  }
+  if (highestStreak < 7) {
+      badgesContainer.innerHTML += '<div style="font-size: 1rem; color: var(--text-muted);">Reach a 7-day streak to earn a badge!</div>';
+  }
+
+  // Github Graph Logic
+  githubGraphContainer.innerHTML = '';
+  const graphEndDate = new Date();
+  const graphStartDate = new Date();
+  graphStartDate.setDate(graphStartDate.getDate() - 364);
+
+  let currentGraphDate = new Date(graphStartDate);
+  while (currentGraphDate <= graphEndDate) {
+      const dateKey = formatDateKey(currentGraphDate.getFullYear(), currentGraphDate.getMonth(), currentGraphDate.getDate());
+      const completions = completionsByDate[dateKey] || 0;
+      
+      let level = 0;
+      if (completions > 0 && completions <= 2) level = 1;
+      else if (completions > 2 && completions <= 4) level = 2;
+      else if (completions > 4 && completions <= 6) level = 3;
+      else if (completions > 6) level = 4;
+
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'github-day';
+      dayDiv.setAttribute('data-level', level);
+      dayDiv.title = dateKey + ': ' + completions + ' completions';
+      
+      githubGraphContainer.appendChild(dayDiv);
+      currentGraphDate.setDate(currentGraphDate.getDate() + 1);
+  }
+  
+  // Scroll to right end (latest dates)
+  githubGraphContainer.scrollLeft = githubGraphContainer.scrollWidth;
+}
+
+// Hook into renderApp to run streaks
+const originalRenderApp = renderApp;
+renderApp = function() {
+    originalRenderApp();
+    calculateStreaksAndGraph();
+};
+
+/* ==========================================================================
+   CALENDAR VIEW LOGIC
+   ========================================================================== */
+function openCalendarModal(habitId) {
+    currentCalendarHabitId = habitId;
+    currentCalendarDate = new Date(selectedYear, selectedMonth, 1);
+    const habit = habits.find((h) => h.id === habitId);
+    if(habit) {
+        calendarModalTitle.innerHTML = habit.icon + ' ' + escapeHTML(habit.title) + ' Calendar';
+    }
+    renderCalendarGrid();
+    calendarModal.classList.add('active');
+    calendarModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeCalendarModal() {
+    calendarModal.classList.remove('active');
+    calendarModal.setAttribute('aria-hidden', 'true');
+    currentCalendarHabitId = null;
+}
+
+function renderCalendarGrid() {
+    if (!currentCalendarHabitId) return;
+    const habit = habits.find((h) => h.id === currentCalendarHabitId);
+    if (!habit) return;
+
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    calendarMonthYear.textContent = months[month] + ' ' + year;
+
+    calendarGrid.innerHTML = '';
+    
+    const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
+    const daysInMonth = getDaysInMonth(year, month);
+
+    // Empty slots before first day
+    for (let i = 0; i < firstDay; i++) {
+        const emptySlot = document.createElement('div');
+        emptySlot.className = 'calendar-day empty';
+        calendarGrid.appendChild(emptySlot);
+    }
+
+    // Days slots
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = formatDateKey(year, month, day);
+        const status = habit.logs[dateKey] || 'pending';
+        
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day ' + status;
+        dayDiv.textContent = day;
+        dayDiv.title = dateKey + ': ' + status.toUpperCase();
+        
+        dayDiv.addEventListener('click', () => {
+            let nextStatus = 'completed';
+            if (status === 'completed') nextStatus = 'missed';
+            else if (status === 'missed') nextStatus = 'pending';
+
+            if (nextStatus === 'pending') {
+                delete habit.logs[dateKey];
+            } else {
+                habit.logs[dateKey] = nextStatus;
+            }
+            saveStateToStorage();
+            renderCalendarGrid(); // re-render grid
+            renderApp(); // re-render main app
+        });
+
+        calendarGrid.appendChild(dayDiv);
+    }
+}
+
+
+/* ==========================================================================
+   PRINT TRACKER SHEET LOGIC (A4 LANDSCAPE MANUAL / DIGITAL SHEET)
+   ========================================================================== */
+const PRINT_MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+function initPrintSelectors() {
+  printMonthSelect.innerHTML = PRINT_MONTH_NAMES
+    .map((m, idx) => `<option value="${idx}" ${idx === selectedMonth ? "selected" : ""}>${m}</option>`)
+    .join("");
+
+  const currentYr = new Date().getFullYear();
+  let yearOptions = "";
+  for (let y = currentYr - 2; y <= currentYr + 2; y++) {
+    yearOptions += `<option value="${y}" ${y === selectedYear ? "selected" : ""}>${y}</option>`;
+  }
+  printYearSelect.innerHTML = yearOptions;
+}
+
+function openPrintModal() {
+  initPrintSelectors();
+  renderPrintPreview();
+  printModal.classList.add("active");
+  printModal.setAttribute("aria-hidden", "false");
+}
+
+function closePrintModal() {
+  printModal.classList.remove("active");
+  printModal.setAttribute("aria-hidden", "true");
+}
+
+function generatePrintableSheetHTML(mode, yr, mo) {
+  const year = parseInt(yr, 10);
+  const month = parseInt(mo, 10);
+  const monthName = PRINT_MONTH_NAMES[month] || "Month";
+  const daysInMonth = getDaysInMonth(year, month);
+
+  // Day header columns
+  let daysHeaderHTML = "";
+  for (let d = 1; d <= daysInMonth; d++) {
+    daysHeaderHTML += `<th class="p-day-th">${d}</th>`;
+  }
+
+  // Summary rows Done & Not Done calculation
+  let printDoneCells = "";
+  let printNotDoneCells = "";
+  let printTotalDone = 0;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const key = formatDateKey(year, month, day);
+    let doneCount = 0;
+    let hasActivity = false;
+
+    habits.forEach((habit) => {
+      const status = habit.logs ? habit.logs[key] : null;
+      if (status === "completed") {
+        doneCount++;
+        hasActivity = true;
+      } else if (status === "missed") {
+        hasActivity = true;
+      }
+    });
+
+    printTotalDone += doneCount;
+    const notDoneCount = habits.length - doneCount;
+
+    if (mode === "progress") {
+      if (hasActivity) {
+        printDoneCells += `<td class="p-day-cell" style="font-weight:700; color:#047857;">${doneCount}</td>`;
+        printNotDoneCells += `<td class="p-day-cell" style="font-weight:700; color:#be123c;">${notDoneCount}</td>`;
+      } else {
+        printDoneCells += `<td class="p-day-cell"></td>`;
+        printNotDoneCells += `<td class="p-day-cell"></td>`;
+      }
+    } else {
+      // Blank mode: clean empty square boxes for pen/pencil ticking/crossing
+      printDoneCells += `<td class="p-day-cell"><span class="p-box" style="border-color:#047857;"></span></td>`;
+      printNotDoneCells += `<td class="p-day-cell"><span class="p-box" style="border-color:#be123c;"></span></td>`;
+    }
+  }
+
+  const printScoreDone = mode === "progress" ? `<strong>${printTotalDone}</strong>` : `___`;
+  const printScoreNotDone = mode === "progress" ? `<strong>${(habits.length * daysInMonth) - printTotalDone}</strong>` : `___`;
+
+  // Habits rows
+  let rowsHTML = "";
+  if (habits.length === 0) {
+    rowsHTML = `<tr><td colspan="${daysInMonth + 6}" style="padding: 20px; text-align: center; color: #6b7280;">No habits available to print. Add habits first!</td></tr>`;
+  } else {
+    habits.forEach((habit, idx) => {
+      let completedCount = 0;
+      let dayCellsHTML = "";
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = formatDateKey(year, month, day);
+        const status = habit.logs ? habit.logs[key] : null;
+
+        if (status === "completed") completedCount++;
+
+        if (mode === "progress" && status) {
+          if (status === "completed") {
+            dayCellsHTML += `<td class="p-day-cell"><span class="p-mark completed">✔</span></td>`;
+          } else if (status === "missed") {
+            dayCellsHTML += `<td class="p-day-cell"><span class="p-mark missed">✕</span></td>`;
+          } else {
+            dayCellsHTML += `<td class="p-day-cell"><span class="p-box"></span></td>`;
+          }
+        } else {
+          // Blank mode: clean empty square boxes for pen/pencil ticking/crossing
+          dayCellsHTML += `<td class="p-day-cell"><span class="p-box"></span></td>`;
+        }
+      }
+
+      const scoreText = mode === "progress" 
+        ? `<strong>${completedCount}</strong>/${habit.goal}` 
+        : `___/${habit.goal}`;
+
+      rowsHTML += `
+        <tr>
+          <td class="p-col-num">${idx + 1}</td>
+          <td class="p-col-time">${escapeHTML(habit.time || "—")}</td>
+          <td class="p-col-habit">${habit.icon || "🎯"} ${escapeHTML(habit.title)}</td>
+          <td class="p-col-cat">${escapeHTML(habit.category || "General")}</td>
+          <td class="p-col-goal">${habit.goal}d</td>
+          ${dayCellsHTML}
+          <td class="p-col-score">${scoreText}</td>
+        </tr>
+      `;
+    });
+  }
+
+  return `
+    <div class="printable-sheet">
+      <div class="print-sheet-header">
+        <div class="print-header-left">
+          <div class="print-title-group">
+            <h1 class="print-main-title">⚡ HABIT PULSE — DAILY ROUTINE & HABIT TRACKER</h1>
+            <div class="print-subtitle">Daily Routine Matrix for Manual Pen / Pencil Tracking</div>
+          </div>
+        </div>
+        <div class="print-header-right">
+          <div class="print-month-badge">${monthName.toUpperCase()} ${year}</div>
+        </div>
+      </div>
+
+      <div class="print-meta-grid">
+        <div class="print-meta-item"><strong>Name / Routine:</strong> ____________________________</div>
+        <div class="print-meta-item"><strong>Target Consistency:</strong> ________ %</div>
+        <div class="print-meta-item"><strong>Total Routines:</strong> ${habits.length} Habits</div>
+        <div class="print-meta-item"><strong>Pen Legend:</strong> [ ✔ ] Done &nbsp;&nbsp; [ ✕ ] Missed &nbsp;&nbsp; [ — ] Rest</div>
+      </div>
+
+      <table class="print-habit-table">
+        <thead>
+          <tr>
+            <th class="p-col-num">#</th>
+            <th class="p-col-time">Time</th>
+            <th class="p-col-habit">Habit / Activity</th>
+            <th class="p-col-cat">Category</th>
+            <th class="p-col-goal">Goal</th>
+            ${daysHeaderHTML}
+            <th class="p-col-score">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHTML}
+        </tbody>
+        <tfoot>
+          <tr class="p-summary-row p-done-row">
+            <td colspan="5" class="p-summary-title">Done</td>
+            ${printDoneCells}
+            <td class="p-col-score">${printScoreDone}</td>
+          </tr>
+          <tr class="p-summary-row p-not-done-row">
+            <td colspan="5" class="p-summary-title">Not Done</td>
+            ${printNotDoneCells}
+            <td class="p-col-score">${printScoreNotDone}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="print-footer-grid">
+        <div class="print-notes-box">
+          <strong>Monthly Reflections, Key Wins & Adjustments:</strong>
+          <div class="print-notes-lines">
+            <div class="print-line"></div>
+            <div class="print-line"></div>
+          </div>
+        </div>
+        <div class="print-summary-box" style="display: flex; flex-direction: column; justify-content: space-between; font-size: 7.8pt;">
+          <div><strong>Monthly Target Met:</strong> &nbsp; [ &nbsp; ] Yes &nbsp;&nbsp; [ &nbsp; ] Partial &nbsp;&nbsp; [ &nbsp; ] No</div>
+          <div><strong>Signed / Reviewed:</strong> ________________________</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPrintPreview() {
+  const mode = printModeSelect.value;
+  const mo = printMonthSelect.value;
+  const yr = printYearSelect.value;
+  printPreviewContent.innerHTML = generatePrintableSheetHTML(mode, yr, mo);
+}
+
+function preparePrintableArea() {
+  const mode = printModeSelect ? printModeSelect.value : "blank";
+  const mo = printMonthSelect ? printMonthSelect.value : selectedMonth;
+  const yr = printYearSelect ? printYearSelect.value : selectedYear;
+  printableArea.innerHTML = generatePrintableSheetHTML(mode, yr, mo);
+}
+
+function executePrint() {
+  preparePrintableArea();
+  window.print();
 }

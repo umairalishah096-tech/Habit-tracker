@@ -1,0 +1,23 @@
+id,title,time,goal,category,color,icon
+habit_1,Fajr Namaz,5:14AM,30,Mindset,#10b981,🕌
+habit_2,Tilawat Quran,5:30 – 5:50 AM,30,Mindset,#10b981,📖
+habit_3,Walk / Stretching / Exercise,5:50 – 6:30 AM,25,Fitness,#10b981,🏃
+habit_4,Shower & Fresh,6:30 – 7:00 AM,30,Health,#3b82f6,🚿
+habit_5,Breakfast,7:00 – 7:30 AM,30,Health,#f59e0b,🍳
+habit_6,Power BI Revision & Practice,7:30 – 9:00 AM,22,Learning,#8b5cf6,📊
+habit_7,Tea Break,9:00 – 9:20 AM,30,Health,#f59e0b,☕
+habit_8,Assignment / Practice,9:20 – 10:20 AM,22,Productivity,#3b82f6,📝
+habit_9,JavaScript Practice (Hostel),10:20 – 10:40 AM,22,Learning,#f59e0b,💻
+habit_10,Lunch,12:20 – 12:50 PM,30,Health,#10b981,🍱
+habit_11,Zuhr Namaz,1:15 PM,30,Mindset,#10b981,🕌
+habit_12,Full Stack Web Development,1:30 – 4:00 PM,22,Learning,#3b82f6,⚙️
+habit_13,Asr Namaz,4:45 PM,30,Mindset,#10b981,🕌
+habit_14,Relax / Break,6:00 – 6:20 PM,30,Health,#ec4899,🛋️
+habit_15,Maghrib Namaz,6:30 PM,30,Mindset,#10b981,🕌
+habit_16,English Speaking & Vocabulary,7:00 – 7:45 PM,25,Learning,#8b5cf6,🗣️
+habit_17,Dinner,7:45 – 8:15 PM,30,Health,#f59e0b,🍽️
+habit_18,Isha Namaz,8:30 PM,30,Mindset,#10b981,🕌
+habit_19,Today's Full Stack Revision,9:00 – 10:00 PM,22,Learning,#3b82f6,📚
+habit_20,Entertainment / Family Time,10:00 – 10:30 PM,30,Health,#ec4899,👨‍👩‍👧‍👦
+habit_21,Plan Tomorrow & Prepare for Next Day,10:30 – 10:45 PM,30,Productivity,#8b5cf6,📋
+habit_22,Sleep,11:00 PM,30,Health,#6366f1,😴

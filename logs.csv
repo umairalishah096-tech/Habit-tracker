@@ -1,0 +1,8 @@
+habit_id,date,status
+habit_1,2026-10-02,completed
+habit_1,2026-10-01,completed
+habit_1,2026-10-03,completed
+habit_1,2026-10-05,completed
+habit_1,2026-10-14,completed
+habit_1,2026-10-21,missed
+habit_1,2026-10-23,missed
